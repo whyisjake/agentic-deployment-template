@@ -41,7 +41,7 @@ jobs:
     # Only the enterprise copy can do this. A runner there can reach github.com;
     # a public runner cannot reach the enterprise host, so the same job there
     # could only compare that copy against itself.
-    if: github.repository == 'Automattic/agentic-workflow-template'
+    if: github.repository == 'Automattic/agentic-deployment-template'
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
@@ -55,7 +55,7 @@ jobs:
         id: fetch
         run: |
           if ! git clone --quiet --depth 1 \
-              https://github.com/whyisjake/agentic-workflow-template.git public; then
+              https://github.com/whyisjake/agentic-deployment-template.git public; then
             echo "reachable=false" >> "$GITHUB_OUTPUT"
             echo "Could not reach the public copy. Reporting that, rather than reporting in-sync."
             exit 0

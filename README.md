@@ -1,4 +1,4 @@
-# Agentic Workflow Template
+# Agentic Deployment Template
 
 A GitHub template repository that brings structured, agent-assisted development to any codebase. Drop it into your repository to get issue templates, automated labeling, and AI agent workflows that route to **Claude Code**, **OpenAI Codex**, **GitHub Copilot**, or a **custom agent** — all configured with a single repository variable.
 
@@ -25,7 +25,7 @@ For `complexity:high` issues, Claude + Compound Engineering runs a planning phas
 **Existing repo** — Run the setup script from your repo root:
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/whyisjake/agentic-workflow-template/main/scripts/setup.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/whyisjake/agentic-deployment-template/main/scripts/setup.sh)
 ```
 
 This copies all workflow files, skips anything that already exists, and prints next steps. Nothing is committed — you review first.

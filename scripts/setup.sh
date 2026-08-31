@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# Adds the agentic workflow template to an existing repository.
+# Adds the agentic deployment template to an existing repository.
 #
 # Usage (run from the root of your target repo):
-#   bash <(curl -fsSL https://raw.githubusercontent.com/whyisjake/agentic-workflow-template/main/scripts/setup.sh)
+#   bash <(curl -fsSL https://raw.githubusercontent.com/whyisjake/agentic-deployment-template/main/scripts/setup.sh)
 #
 # Or clone and run locally:
-#   bash /path/to/agentic-workflow-template/scripts/setup.sh
+#   bash /path/to/agentic-deployment-template/scripts/setup.sh
 #
 # Installing from a fork or a mirror:
 #   Set TEMPLATE_REPO_URL to the raw base URL of the copy you want, and
@@ -51,8 +51,8 @@
 set -euo pipefail
 
 REPO_URL_EXPLICIT="${TEMPLATE_REPO_URL:+yes}"
-REPO_URL="${TEMPLATE_REPO_URL:-https://raw.githubusercontent.com/whyisjake/agentic-workflow-template/main}"
-DOCS_URL="${TEMPLATE_DOCS_URL:-https://github.com/whyisjake/agentic-workflow-template}"
+REPO_URL="${TEMPLATE_REPO_URL:-https://raw.githubusercontent.com/whyisjake/agentic-deployment-template/main}"
+DOCS_URL="${TEMPLATE_DOCS_URL:-https://github.com/whyisjake/agentic-deployment-template}"
 TEMPLATE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")/.." 2>/dev/null && pwd)" || true
 
 # Decide where files come from once, up front, instead of per file.
@@ -117,7 +117,7 @@ if [[ ! -d ".git" ]]; then
 fi
 
 bold ""
-bold "Agentic Workflow Template — Setup"
+bold "Agentic Deployment Template — Setup"
 echo  "Adding agent-ready workflow files to: $(basename "$(pwd)")"
 echo  "Installing from: $SOURCE_DESC"
 echo  ""
@@ -389,7 +389,7 @@ echo "     git status"
 echo ""
 echo "  2. Commit:"
 echo "     git add .github/ docs/"
-echo "     git commit -m 'chore: add agentic workflow template'"
+echo "     git commit -m 'chore: add agentic deployment template'"
 echo "     git push"
 echo ""
 echo "  3. Sync labels (run once after pushing):"
