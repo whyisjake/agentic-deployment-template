@@ -11,10 +11,18 @@
 # scripts/setup.sh does not install it: it watches two internal copies and
 # means nothing inside a customer's repo.
 #
-# The direction is the whole point. A runner here can reach github.com; a
-# public runner cannot reach this host. So this is the only side from which
-# both trees are visible, and a check on the public side could only ever
-# compare that copy against itself.
+# The direction is the whole point. A runner here is expected to reach
+# github.com; a public runner cannot reach this host. So this is the only side
+# from which both trees are visible, and a check on the public side could only
+# ever compare that copy against itself.
+#
+# "Expected to" is doing real work in that sentence. This job had never once
+# executed before VIPPROD-1154 -- it requested a runner label the enterprise
+# instance does not serve -- so outbound reachability from a `secex` runner to
+# github.com has never actually been observed. The fetch step below already
+# treats an unreachable public copy as a reportable outcome rather than as
+# in-sync, so a first run that cannot clone will say so plainly rather than
+# going quiet. That is the answer either way; it just has not been tested yet.
 #
 # It compares CONTENT, not the presence of paths. When these copies last
 # drifted, seven files existed on both sides with different contents — every
@@ -42,7 +50,19 @@ jobs:
     # a public runner cannot reach the enterprise host, so the same job there
     # could only compare that copy against itself.
     if: github.repository == 'Automattic/agentic-deployment-template'
-    runs-on: ubuntu-latest
+
+    # The enterprise instance serves no `ubuntu-latest`. Every run of this job
+    # since it was written queued against that label for 26-38 hours and was
+    # killed before starting -- "Requested labels: ubuntu-latest / Waiting for a
+    # runner to pick up this job... / Job is completed before starting." So the
+    # check that exists to notice drift has never once run. See VIPPROD-1154.
+    #
+    # This label is safe to carry on the public copy too, even though nothing
+    # there can serve it: the `if:` above is evaluated before a runner is
+    # allocated, so on the public copy the job is skipped and the label is never
+    # resolved. That matters because this file has to stay byte-identical on
+    # both copies -- an enterprise-only edit is exactly the drift it reports.
+    runs-on: [self-hosted, secex, gha-runner-1cpu-1gb]
     timeout-minutes: 10
 
     steps:
