@@ -9,7 +9,7 @@
 #
 # Setup:
 #   1. Set AGENT_PROVIDER in Settings → Secrets and variables → Variables
-#   2. Add the required secret for your chosen provider (see README)
+#   2. Add the required secret for your chosen provider (claude: CLAUDE_CODE_OAUTH_TOKEN)
 #   3. Run the Setup Labels workflow once to create all labels
 #
 # If AGENT_PROVIDER is not set, the workflow defaults to claude.
@@ -372,15 +372,18 @@ jobs:
                 '',
                 `The failing step and its error are in the [job log](${runUrl}) — start there.`,
                 '',
-                'The Claude provider needs two things, and setup is incomplete if either is missing:',
+                'Check the Claude provider setup:',
                 '',
-                '- the `CLAUDE_CODE_OAUTH_TOKEN` secret — **Settings → Secrets and variables → Secrets**',
-                '- the **Claude GitHub App** installed on this repository — https://github.com/apps/claude',
+                '- **Required:** the `CLAUDE_CODE_OAUTH_TOKEN` secret — **Settings → Secrets and variables → Actions → Secrets**. If you use Claude Code in a terminal, `/install-github-app` adds it.',
+                '- **Recommended:** the **Claude GitHub App** installed on this repository — https://github.com/apps/claude. Without it the agent still runs, but its pull requests get no CI runs.',
                 '',
-                'A missing app shows up as `App token exchange failed: 401 Unauthorized` within a few seconds of the run starting.',
-                '',
-                'See the [README](../blob/main/README.md) for the full setup.'
+                'If the log shows `App token exchange failed: 401 Unauthorized` within a few seconds of the run starting, install the app.'
             ];
+            // Everything the reader needs is inline. This used to end with a
+            // relative link to the template README, but neither setup.sh nor
+            // Codebase Manager installs that README, so in a customer repo the
+            // link opened the customer's own.
+
             // Update in place. This comment used to stack: observed posting
             // twice for one issue, and staying the newest word on the issue
             // long after the cause was fixed and a later run had succeeded.
