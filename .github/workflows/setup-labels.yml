@@ -1,7 +1,12 @@
-# One-time setup: syncs all labels from .github/LABELS.yml into this repository.
+# Syncs all labels from .github/LABELS.yml into this repository.
 #
-# Run this once after using the template to create your repo:
-#   Actions → Setup Labels → Run workflow
+# Runs on its own when LABELS.yml changes on the default branch -- including the
+# merge that first adds it, so a repo set up by pull request gets its labels
+# without anyone knowing to come here. Before that, it only ran by hand, and a
+# customer who merged the setup PR was left with no labels and an auto-labeler
+# that could not apply one.
+#
+# You can still run it by hand: Actions → Setup Labels → Run workflow
 #
 # This workflow is idempotent — running it multiple times only updates colors
 # and descriptions; it never deletes labels or fails on existing labels.
@@ -10,12 +15,18 @@ name: Setup Labels
 
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - '.github/LABELS.yml'
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   sync-labels:
+    # A push to any other branch is someone editing LABELS.yml on a feature
+    # branch; the labels are repo-wide, so only the default branch applies them.
+    if: github.event_name == 'workflow_dispatch' || github.ref_name == github.event.repository.default_branch
     runs-on: ubuntu-latest
     permissions:
       contents: read
