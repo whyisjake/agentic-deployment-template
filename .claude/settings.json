@@ -19,7 +19,7 @@
       "Bash(head *)",
       "Bash(tail *)",
       "Bash(echo *)",
-      "Bash(bash scripts/validate-workflows.sh)"
+      "Bash(bash scripts/vip-validate-workflows.sh)"
     ],
     "deny": [
       "Bash(git -c *)",

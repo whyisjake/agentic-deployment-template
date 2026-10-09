@@ -1,30 +1,30 @@
-# Syncs all labels from .github/LABELS.yml into this repository.
+# Syncs all labels from .github/vip-agent-labels.yml into this repository.
 #
-# Runs on its own when LABELS.yml changes on the default branch -- including the
+# Runs on its own when vip-agent-labels.yml changes on the default branch -- including the
 # merge that first adds it, so a repo set up by pull request gets its labels
 # without anyone knowing to come here. Before that, it only ran by hand, and a
 # customer who merged the setup PR was left with no labels and an auto-labeler
 # that could not apply one.
 #
-# You can still run it by hand: Actions → Setup Labels → Run workflow
+# You can still run it by hand: Actions → VIP Setup Labels → Run workflow
 #
 # This workflow is idempotent — running it multiple times only updates colors
 # and descriptions; it never deletes labels or fails on existing labels.
 
-name: Setup Labels
+name: VIP Setup Labels
 
 on:
   workflow_dispatch:
   push:
     paths:
-      - '.github/LABELS.yml'
+      - '.github/vip-agent-labels.yml'
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   sync-labels:
-    # A push to any other branch is someone editing LABELS.yml on a feature
+    # A push to any other branch is someone editing vip-agent-labels.yml on a feature
     # branch; the labels are repo-wide, so only the default branch applies them.
     if: github.event_name == 'workflow_dispatch' || github.ref_name == github.event.repository.default_branch
     runs-on: ubuntu-latest
@@ -36,13 +36,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Sync labels from LABELS.yml
+      - name: Sync labels from vip-agent-labels.yml
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
             const fs = require('fs');
 
-            const labelsFile = fs.readFileSync('.github/LABELS.yml', 'utf8');
+            const labelsFile = fs.readFileSync('.github/vip-agent-labels.yml', 'utf8');
 
             // Minimal YAML parser for our known label format (avoids js-yaml dependency).
             // Handles: array entries starting with "- ", key: value lines, and # comments.
@@ -72,7 +72,7 @@ jobs:
             if (current && current.name) labels.push(current);
 
             if (!Array.isArray(labels)) {
-              core.setFailed('LABELS.yml must be a YAML array of label objects');
+              core.setFailed('vip-agent-labels.yml must be a YAML array of label objects');
               return;
             }
 

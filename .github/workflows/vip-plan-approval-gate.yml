@@ -1,7 +1,7 @@
 # Listens for '/approve-plan' comments on issues and implements the approved plan.
 #
-# This workflow is part of the complexity:high flow:
-#   1. agent-ready-trigger.yml fires, Claude writes a plan, commits it to a plan/ branch
+# This workflow is part of the vip-complexity:high flow:
+#   1. vip-agent-ready-trigger.yml fires, Claude writes a plan, commits it to a plan/ branch
 #   2. Claude posts a comment asking for /approve-plan
 #   3. This workflow fires on that comment, verifies the commenter, then implements
 #
@@ -13,7 +13,7 @@
 # Only collaborators with write or admin permission can approve plans.
 # Non-collaborators receive a reply comment but no agent run is started.
 
-name: Plan Approval Gate
+name: VIP Plan Approval Gate
 
 on:
   issue_comment:
@@ -120,7 +120,7 @@ jobs:
         if: |
           steps.permission-check.outputs.allowed == 'true' &&
           steps.pr-check.outputs.already_running == 'false'
-        uses: ./.github/actions/claude-run
+        uses: ./.github/actions/vip-claude-run
         with:
           oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           report_issue_number: ${{ github.event.issue.number }}
@@ -145,8 +145,8 @@ jobs:
                implement anything — an approved plan that cannot be found is worth
                reporting, not working around silently
             4. Implement the feature per the plan or issue
-            5. Open a PR using the agent-generated PR template
-            6. Add the 'agent-generated' label to the PR
+            5. Open a PR using the vip-agent-generated PR template
+            6. Add the 'vip-agent-generated' label to the PR
 
             Important:
             - Stay within the issue's defined scope ("Out of scope" is a hard boundary)
@@ -174,7 +174,7 @@ jobs:
             Before opening the PR, if you added or changed anything under
             .github/workflows/, run:
 
-                bash scripts/validate-workflows.sh
+                bash scripts/vip-validate-workflows.sh
 
             Fix what it reports and run it again. Do not open the PR while it
             is failing.

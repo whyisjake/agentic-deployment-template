@@ -1,20 +1,20 @@
 # Flags issues that have the shape of an agent-ready issue, by applying
-# 'agent-candidate'. It NEVER applies 'agent-ready' — that decision belongs to a
+# 'vip-agent-candidate'. It NEVER applies 'vip-agent-ready' — that decision belongs to a
 # human, and it is the label that starts a paid agent run.
 #
-# This matches what issue-screener.yml already says in its own header. The two
-# workflows disagreed until 21 August, when this one applied 'agent-ready' to a
+# This matches what vip-issue-screener.yml already says in its own header. The two
+# workflows disagreed until 21 August, when this one applied 'vip-agent-ready' to a
 # freshly-opened issue that had no complexity label yet, a run started, and the
 # agent took the direct path on work that was meant to be planned first. It
 # spent 14 turns and produced nothing.
 #
-# The check itself lives in .github/actions/screen-issue, because the trigger
+# The check itself lives in .github/actions/vip-screen-issue, because the trigger
 # uses the same one to refuse a malformed issue. One definition, two callers.
 #
 # It is structural: an issue with every heading and nothing written under them
 # passes. That is why the label it applies is a hint, not a trigger.
 
-name: Auto-Label Agent-Ready Issues
+name: VIP Auto-Label Agent-Ready Issues
 
 on:
   issues:
@@ -39,17 +39,17 @@ jobs:
 
       - name: Screen the issue
         id: screen
-        uses: ./.github/actions/screen-issue
+        uses: ./.github/actions/vip-screen-issue
         with:
           issue_body: ${{ github.event.issue.body }}
 
-      - name: Apply agent-candidate
+      - name: Apply vip-agent-candidate
         if: steps.screen.outputs.ready == 'true'
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
             const labels = context.payload.issue.labels.map(l => l.name);
-            if (labels.includes('agent-candidate') || labels.includes('agent-ready')) {
+            if (labels.includes('vip-agent-candidate') || labels.includes('vip-agent-ready')) {
               console.log('Already flagged or already approved — nothing to do.');
               return;
             }
@@ -58,13 +58,13 @@ jobs:
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: context.payload.issue.number,
-                labels: ['agent-candidate'],
+                labels: ['vip-agent-candidate'],
               });
-              console.log('Applied agent-candidate. A human applies agent-ready to start a run.');
+              console.log('Applied vip-agent-candidate. A human applies vip-agent-ready to start a run.');
             } catch (err) {
               // Name the label sync as one possible cause, not the cause: this
-              // message once sent people to Setup Labels for a checkout failure.
+              // message once sent people to VIP Setup Labels for a checkout failure.
               core.setFailed(
-                `Failed to add agent-candidate: ${err.message}. ` +
-                'If the label is missing, run the Setup Labels workflow (Actions → Setup Labels → Run workflow).');
+                `Failed to add vip-agent-candidate: ${err.message}. ` +
+                'If the label is missing, run the VIP Setup Labels workflow (Actions → VIP Setup Labels → Run workflow).');
             }

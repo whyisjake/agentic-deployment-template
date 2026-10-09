@@ -6,8 +6,8 @@ description: >-
 
 # Why this exists
 #
-# The same check lived in auto-label-agent-ready.yml and, in a richer form, in
-# issue-screener.yml — and the trigger had none at all, so applying agent-ready
+# The same check lived in vip-auto-label-agent-ready.yml and, in a richer form, in
+# vip-issue-screener.yml — and the trigger had none at all, so applying vip-agent-ready
 # to a half-written issue ran the agent on a bad brief with no warning.
 #
 # It is structural on purpose. It cannot tell whether the Acceptance Criteria

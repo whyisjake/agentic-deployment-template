@@ -20,14 +20,14 @@
 #   instead; local mode never touches the network.
 #
 # What this does:
-#   - Adds .github/ISSUE_TEMPLATE/agent-ready.md       (alongside existing templates)
-#   - Adds .github/PULL_REQUEST_TEMPLATE/agent-generated.md  (alongside existing templates)
-#   - Adds .github/LABELS.yml  (or prints merge instructions if one already exists)
+#   - Adds .github/ISSUE_TEMPLATE/vip-agent-ready.md       (alongside existing templates)
+#   - Adds .github/PULL_REQUEST_TEMPLATE/vip-agent-generated.md  (alongside existing templates)
+#   - Adds .github/vip-agent-labels.yml  (or prints merge instructions if one already exists)
 #   - Adds .github/workflows/  (all agent workflow files, skips any that already exist)
-#   - Adds .github/agents/issue-screener.agent.md
-#   - Adds scripts/validate-workflows.sh  (the workflow YAML + permission guard)
-#   - Adds .github/actions/claude-run/       (the shared agent invocation)
-#   - Adds .github/actions/screen-issue/     (the shared issue structure check)
+#   - Adds .github/agents/vip-issue-screener.agent.md
+#   - Adds scripts/vip-validate-workflows.sh  (the workflow YAML + permission guard)
+#   - Adds .github/actions/vip-claude-run/       (the shared agent invocation)
+#   - Adds .github/actions/vip-screen-issue/     (the shared issue structure check)
 #   - Creates docs/ if it doesn't exist
 #   - Sets the AGENT_PROVIDER repository variable, and reports on the secret
 #   - Prints next steps
@@ -65,7 +65,7 @@ TEMPLATE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")/.." 2>/dev/null && pwd)" 
 # rather than quietly installing someone else's copy.
 if [[ "$REPO_URL_EXPLICIT" == "yes" ]]; then
   SOURCE_MODE="remote"
-elif [[ -n "$TEMPLATE_DIR" && -f "$TEMPLATE_DIR/.github/workflows/agent-ready-trigger.yml" ]]; then
+elif [[ -n "$TEMPLATE_DIR" && -f "$TEMPLATE_DIR/.github/workflows/vip-agent-ready-trigger.yml" ]]; then
   SOURCE_MODE="local"
 else
   SOURCE_MODE="remote"
@@ -73,10 +73,10 @@ fi
 
 if [[ "$SOURCE_MODE" == "local" ]]; then
   SOURCE_DESC="local clone at $TEMPLATE_DIR"
-  LABELS_SOURCE="$TEMPLATE_DIR/.github/LABELS.yml"
+  LABELS_SOURCE="$TEMPLATE_DIR/.github/vip-agent-labels.yml"
 else
   SOURCE_DESC="$REPO_URL"
-  LABELS_SOURCE="$REPO_URL/.github/LABELS.yml"
+  LABELS_SOURCE="$REPO_URL/.github/vip-agent-labels.yml"
 fi
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -118,23 +118,23 @@ fi
 
 bold ""
 bold "Agentic Deployment Template — Setup"
-echo  "Adding agent-ready workflow files to: $(basename "$(pwd)")"
+echo  "Adding vip-agent-ready workflow files to: $(basename "$(pwd)")"
 echo  "Installing from: $SOURCE_DESC"
 echo  ""
 
 # ── Issue template ────────────────────────────────────────────────────────────
 # GitHub shows every file in ISSUE_TEMPLATE/ as a separate choice when opening
-# an issue, so agent-ready.md coexists with bug_report.md, feature_request.md, etc.
+# an issue, so vip-agent-ready.md coexists with bug_report.md, feature_request.md, etc.
 
 if [[ -d ".github/ISSUE_TEMPLATE" ]]; then
-  dim "  .github/ISSUE_TEMPLATE/ already exists — adding agent-ready.md alongside your existing templates"
+  dim "  .github/ISSUE_TEMPLATE/ already exists — adding vip-agent-ready.md alongside your existing templates"
 fi
 
-if [[ -f ".github/ISSUE_TEMPLATE/agent-ready.md" ]]; then
-  yellow "  skipped (already exists): .github/ISSUE_TEMPLATE/agent-ready.md"
+if [[ -f ".github/ISSUE_TEMPLATE/vip-agent-ready.md" ]]; then
+  yellow "  skipped (already exists): .github/ISSUE_TEMPLATE/vip-agent-ready.md"
 else
-  fetch ".github/ISSUE_TEMPLATE/agent-ready.md" ".github/ISSUE_TEMPLATE/agent-ready.md"
-  green "  added: .github/ISSUE_TEMPLATE/agent-ready.md"
+  fetch ".github/ISSUE_TEMPLATE/vip-agent-ready.md" ".github/ISSUE_TEMPLATE/vip-agent-ready.md"
+  green "  added: .github/ISSUE_TEMPLATE/vip-agent-ready.md"
 fi
 
 # ── PR template ───────────────────────────────────────────────────────────────
@@ -147,22 +147,22 @@ if [[ -f ".github/pull_request_template.md" ]]; then
   dim "  (GitHub uses named templates when PULL_REQUEST_TEMPLATE/ exists; your existing template is unaffected)"
 fi
 
-if [[ -f ".github/PULL_REQUEST_TEMPLATE/agent-generated.md" ]]; then
-  yellow "  skipped (already exists): .github/PULL_REQUEST_TEMPLATE/agent-generated.md"
+if [[ -f ".github/PULL_REQUEST_TEMPLATE/vip-agent-generated.md" ]]; then
+  yellow "  skipped (already exists): .github/PULL_REQUEST_TEMPLATE/vip-agent-generated.md"
 else
-  fetch ".github/PULL_REQUEST_TEMPLATE/agent-generated.md" ".github/PULL_REQUEST_TEMPLATE/agent-generated.md"
-  green "  added: .github/PULL_REQUEST_TEMPLATE/agent-generated.md"
+  fetch ".github/PULL_REQUEST_TEMPLATE/vip-agent-generated.md" ".github/PULL_REQUEST_TEMPLATE/vip-agent-generated.md"
+  green "  added: .github/PULL_REQUEST_TEMPLATE/vip-agent-generated.md"
 fi
 
-# ── LABELS.yml ────────────────────────────────────────────────────────────────
+# ── vip-agent-labels.yml ────────────────────────────────────────────────────────────────
 
-if [[ -f ".github/LABELS.yml" ]]; then
-  yellow "  skipped (already exists): .github/LABELS.yml"
-  echo   "  → To add agent labels, append these entries to your existing LABELS.yml:"
+if [[ -f ".github/vip-agent-labels.yml" ]]; then
+  yellow "  skipped (already exists): .github/vip-agent-labels.yml"
+  echo   "  → To add agent labels, append these entries to your existing vip-agent-labels.yml:"
   echo   "    $LABELS_SOURCE"
 else
-  fetch ".github/LABELS.yml" ".github/LABELS.yml"
-  green "  added: .github/LABELS.yml"
+  fetch ".github/vip-agent-labels.yml" ".github/vip-agent-labels.yml"
+  green "  added: .github/vip-agent-labels.yml"
 fi
 
 # ── Workflows ────────────────────────────────────────────────────────────────
@@ -170,13 +170,13 @@ fi
 # rest unaffected.
 
 WORKFLOW_FILES=(
-  ".github/workflows/agent-ready-trigger.yml"
-  ".github/workflows/plan-approval-gate.yml"
-  ".github/workflows/setup-labels.yml"
-  ".github/workflows/auto-label-agent-ready.yml"
-  ".github/workflows/issue-screener.yml"
-  ".github/workflows/validate-workflows.yml"
-  ".github/workflows/claude-pr-feedback.yml"
+  ".github/workflows/vip-agent-ready-trigger.yml"
+  ".github/workflows/vip-plan-approval-gate.yml"
+  ".github/workflows/vip-setup-labels.yml"
+  ".github/workflows/vip-auto-label-agent-ready.yml"
+  ".github/workflows/vip-issue-screener.yml"
+  ".github/workflows/vip-validate-workflows.yml"
+  ".github/workflows/vip-claude-pr-feedback.yml"
 )
 
 for file in "${WORKFLOW_FILES[@]}"; do
@@ -190,22 +190,22 @@ done
 
 # ── Agent file ────────────────────────────────────────────────────────────────
 
-if [[ -f ".github/agents/issue-screener.agent.md" ]]; then
-  yellow "  skipped (already exists): .github/agents/issue-screener.agent.md"
+if [[ -f ".github/agents/vip-issue-screener.agent.md" ]]; then
+  yellow "  skipped (already exists): .github/agents/vip-issue-screener.agent.md"
 else
-  fetch ".github/agents/issue-screener.agent.md" ".github/agents/issue-screener.agent.md"
-  green "  added: .github/agents/issue-screener.agent.md"
+  fetch ".github/agents/vip-issue-screener.agent.md" ".github/agents/vip-issue-screener.agent.md"
+  green "  added: .github/agents/vip-issue-screener.agent.md"
 fi
 
 # ── Composite action ──────────────────────────────────────────────────────────
-# The workflows call ./.github/actions/claude-run rather than the upstream
+# The workflows call ./.github/actions/vip-claude-run rather than the upstream
 # action directly, so the permission mode and allow list have one definition.
 # A repo that gets the workflows without this directory has three workflows
 # referencing an action that does not exist, and every agent run fails at
 # startup — so this is not optional and is installed even if it already exists
 # in some other form.
 
-for action in claude-run screen-issue; do
+for action in vip-claude-run vip-screen-issue; do
   if [[ -f ".github/actions/$action/action.yml" ]]; then
     yellow "  skipped (already exists): .github/actions/$action/action.yml"
   else
@@ -215,17 +215,17 @@ for action in claude-run screen-issue; do
 done
 
 # ── Scripts ───────────────────────────────────────────────────────────────────
-# validate-workflows.sh installs alongside the workflows because both halves of
+# vip-validate-workflows.sh installs alongside the workflows because both halves of
 # the guard depend on it: the agent is told to run it before opening a PR, and
-# validate-workflows.yml runs it in CI. Installing the workflow without the
+# vip-validate-workflows.yml runs it in CI. Installing the workflow without the
 # script would leave the guard broken in the one repo that needs it.
 
-if [[ -f "scripts/validate-workflows.sh" ]]; then
-  yellow "  skipped (already exists): scripts/validate-workflows.sh"
+if [[ -f "scripts/vip-validate-workflows.sh" ]]; then
+  yellow "  skipped (already exists): scripts/vip-validate-workflows.sh"
 else
-  fetch "scripts/validate-workflows.sh" "scripts/validate-workflows.sh"
-  chmod +x "scripts/validate-workflows.sh"
-  green "  added: scripts/validate-workflows.sh"
+  fetch "scripts/vip-validate-workflows.sh" "scripts/vip-validate-workflows.sh"
+  chmod +x "scripts/vip-validate-workflows.sh"
+  green "  added: scripts/vip-validate-workflows.sh"
 fi
 
 # ── docs/ directory ───────────────────────────────────────────────────────────
@@ -239,7 +239,7 @@ fi
 # Copying the files in is not enough to make the agent run. The workflows read
 # AGENT_PROVIDER from repository variables and the provider's key from
 # repository secrets. With neither set, labels sync and CI goes green, so the
-# repo looks configured — but labelling an issue agent-ready does nothing, and
+# repo looks configured — but labelling an issue vip-agent-ready does nothing, and
 # the first sign of that is an issue that never gets a PR.
 #
 # So the variable gets set here, and the secret — which this script cannot set,
@@ -333,9 +333,9 @@ else
     openai-codex|copilot)
       echo ""
       red   "  '$provider' is not implemented — its job is a stub."
-      echo  "  trigger-$provider in .github/workflows/agent-ready-trigger.yml echoes a"
+      echo  "  trigger-$provider in .github/workflows/vip-agent-ready-trigger.yml echoes a"
       echo  "  message and exits without running an agent or opening a pull request."
-      echo  "  Labelling an issue agent-ready under this provider will not produce a PR"
+      echo  "  Labelling an issue vip-agent-ready under this provider will not produce a PR"
       echo  "  until you write that job yourself."
       echo  "  For a working agent, re-run with: AGENT_PROVIDER=claude bash scripts/setup.sh"
       echo ""
@@ -344,12 +344,12 @@ else
     custom)
       echo ""
       yellow "  'custom' dispatches; it does not implement."
-      echo   "  trigger-custom fires a repository_dispatch 'agent-ready' event carrying the"
+      echo   "  trigger-custom fires a repository_dispatch 'vip-agent-ready' event carrying the"
       echo   "  issue payload. Nothing consumes it until you add a listener workflow in THIS"
       echo   "  repository — repository_dispatch is not cross-repo."
       echo   "  For a working agent without writing one, re-run with: AGENT_PROVIDER=claude"
       echo ""
-      PROVIDER_NEXT_STEP="Provider is custom — add a listener workflow for the repository_dispatch 'agent-ready' event."
+      PROVIDER_NEXT_STEP="Provider is custom — add a listener workflow for the repository_dispatch 'vip-agent-ready' event."
       ;;
   esac
 
@@ -370,7 +370,7 @@ else
       PROVIDER_NEXT_STEP="Provider is $provider and $secret is set — you are ready to label an issue."
     else
       red   "  missing: $secret"
-      echo  "  Until it is set, labelling an issue agent-ready will not start the agent."
+      echo  "  Until it is set, labelling an issue vip-agent-ready will not start the agent."
       echo  "  It is your credential and secrets are write-only, so this script cannot add it."
       echo  "  Add it with:  gh secret set $secret"
       echo  "  or at:        Settings → Secrets and variables → Actions → Secrets"
@@ -393,7 +393,7 @@ echo "     git commit -m 'chore: add agentic deployment template'"
 echo "     git push"
 echo ""
 echo "  3. Sync labels (run once after pushing):"
-echo "     Actions → Setup Labels → Run workflow"
+echo "     Actions → VIP Setup Labels → Run workflow"
 echo ""
 echo "  4. Agent provider:"
 echo "     $PROVIDER_NEXT_STEP"

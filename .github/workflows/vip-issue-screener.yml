@@ -2,16 +2,16 @@
 # Runs weekly and on manual dispatch.
 #
 # This is the lightweight (no-LLM) screener. It scores issues structurally
-# using the rubric below and applies 'agent-candidate' to high-scoring issues.
-# A human must review candidates and apply 'agent-ready' to start execution.
+# using the rubric below and applies 'vip-agent-candidate' to high-scoring issues.
+# A human must review candidates and apply 'vip-agent-ready' to start execution.
 #
 # For the Claude-powered screener (richer analysis, draft templates in comments),
-# see .github/agents/issue-screener.agent.md and use it with Claude Code or
+# see .github/agents/vip-issue-screener.agent.md and use it with Claude Code or
 # anthropics/claude-code-action.
 #
-# The screener NEVER applies 'agent-ready' — that decision belongs to a human.
+# The screener NEVER applies 'vip-agent-ready' — that decision belongs to a human.
 
-name: Issue Screener
+name: VIP Issue Screener
 
 on:
   schedule:
@@ -22,7 +22,7 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
-  screen-issues:
+  vip-screen-issues:
     runs-on: ubuntu-latest
     permissions:
       issues: write
@@ -32,7 +32,7 @@ jobs:
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
-            // Fetch open issues not yet labeled agent-ready or agent-candidate
+            // Fetch open issues not yet labeled vip-agent-ready or vip-agent-candidate
             const { data: allIssues } = await github.rest.issues.listForRepo({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -44,7 +44,7 @@ jobs:
               // Skip PRs (GitHub returns them in issues API)
               if (issue.pull_request) return false;
               const labelNames = issue.labels.map(l => l.name);
-              return !labelNames.includes('agent-ready') && !labelNames.includes('agent-candidate');
+              return !labelNames.includes('vip-agent-ready') && !labelNames.includes('vip-agent-candidate');
             });
 
             if (issues.length === 0) {
@@ -164,11 +164,11 @@ jobs:
               ).join('\n');
 
               const comment = [
-                '## Issue Screener — Candidate Report',
+                '## VIP Issue Screener — Candidate Report',
                 '',
                 '> **This is an automated structural assessment.** A human must review and apply',
-                '> the `agent-ready` label to start agent execution.',
-                '> The `agent-candidate` label has been applied to this issue.',
+                '> the `vip-agent-ready` label to start agent execution.',
+                '> The `vip-agent-candidate` label has been applied to this issue.',
                 '',
                 '---',
                 '',
@@ -182,13 +182,13 @@ jobs:
                 '### What Would Improve This Issue',
                 '',
                 ...(score >= 7 ? [
-                  'This issue scores strongly. To promote to `agent-ready`:',
+                  'This issue scores strongly. To promote to `vip-agent-ready`:',
                   '',
                   '- [ ] Verify scope is bounded (one PR)',
                   '- [ ] Add "Out of scope" exclusions if missing',
                   '- [ ] Link to specific files or patterns to follow',
                 ] : [
-                  'To reach `agent-ready` status, consider:',
+                  'To reach `vip-agent-ready` status, consider:',
                   '',
                   ...(!signals.find(s => s.signal.includes('acceptance criteria')) ? ['- [ ] Add acceptance criteria checkboxes (specific, testable criteria)'] : []),
                   ...(!signals.find(s => s.signal.includes('file/class')) ? ['- [ ] Reference specific files, classes, or APIs in the codebase'] : []),
@@ -198,7 +198,7 @@ jobs:
                 '',
                 '---',
                 '',
-                `_Issue Screener — automated structural check · [Configure](.github/workflows/issue-screener.yml)_`,
+                `_Issue Screener — automated structural check · [Configure](.github/workflows/vip-issue-screener.yml)_`,
               ].join('\n');
 
               try {
@@ -214,10 +214,10 @@ jobs:
                     owner: context.repo.owner,
                     repo: context.repo.repo,
                     issue_number: issue.number,
-                    labels: ['agent-candidate']
+                    labels: ['vip-agent-candidate']
                   });
                 } catch (labelErr) {
-                  console.error(`  Could not apply agent-candidate to #${issue.number}: ${labelErr.message}`);
+                  console.error(`  Could not apply vip-agent-candidate to #${issue.number}: ${labelErr.message}`);
                   // Continue — the comment was posted; the label is a bonus
                 }
 
@@ -232,7 +232,7 @@ jobs:
 
             // Run summary
             console.log('');
-            console.log('Issue Screener Run Summary');
+            console.log('VIP Issue Screener Run Summary');
             console.log('==========================');
             console.log(`Total issues evaluated: ${issues.length}`);
             console.log(`Candidates (score ≥ 5): ${candidates}`);

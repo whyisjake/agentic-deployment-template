@@ -3,7 +3,7 @@
 # is not valid YAML.
 #
 # Usage:
-#   bash scripts/validate-workflows.sh [directory]
+#   bash scripts/vip-validate-workflows.sh [directory]
 #
 # Why this exists:
 #   A workflow file that does not parse does not fail loudly. GitHub cannot
@@ -139,7 +139,7 @@ check_permissions() {
   # from .claude/settings.json, which ships with the template and is read by
   # the agent at runtime.
   # Follow the allow list wherever it lives. It moved out of the workflows and
-  # into .github/actions/claude-run/action.yml when the block was extracted, and
+  # into .github/actions/vip-claude-run/action.yml when the block was extracted, and
   # a check that only scanned .github/workflows/ passed vacuously the moment it
   # moved — verified by injecting Bash(curl *) into the composite action and
   # watching this script report clean.
@@ -154,7 +154,7 @@ check_permissions() {
     # Only look inside allow arrays; deny arrays legitimately name these.
     local offenders
     # Only a wildcard or bare invocation is dangerous. A pinned command with
-    # its own arguments — "Bash(bash scripts/validate-workflows.sh)" — grants
+    # its own arguments — "Bash(bash scripts/vip-validate-workflows.sh)" — grants
     # exactly one thing and is fine; flagging it would make this check fail on
     # its own repository.
     offenders="$(awk '
@@ -203,7 +203,7 @@ check_timeouts() {
         bad=1
       fi
     done < <(grep -h "timeout-minutes:" "$f" 2>/dev/null | grep -v "^\s*#")
-  done < <(grep -rl "claude-run\|claude-code-action" "$WORKFLOW_DIR" 2>/dev/null | sort)
+  done < <(grep -rl "vip-claude-run\|claude-code-action" "$WORKFLOW_DIR" 2>/dev/null | sort)
 
   if [[ "$bad" -gt 0 ]]; then
     echo ""

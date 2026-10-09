@@ -1,4 +1,4 @@
-# Fires when an issue receives the 'agent-ready' label.
+# Fires when an issue receives the 'vip-agent-ready' label.
 # Routes to the AI agent configured in the AGENT_PROVIDER repository variable.
 #
 # Supported providers:
@@ -10,18 +10,18 @@
 # Setup:
 #   1. Set AGENT_PROVIDER in Settings → Secrets and variables → Variables
 #   2. Add the required secret for your chosen provider (claude: CLAUDE_CODE_OAUTH_TOKEN)
-#   3. Run the Setup Labels workflow once to create all labels
+#   3. Run the VIP Setup Labels workflow once to create all labels
 #
 # If AGENT_PROVIDER is not set, the workflow defaults to claude.
 
-name: Agent-Ready Auto-Trigger
+name: VIP Agent-Ready Auto-Trigger
 
 on:
   issues:
     # `labeled` only, on purpose.
     #
     # `edited` hands the issue author a re-run button: anyone whose issue once
-    # earned an agent-ready label could rewrite the body with new instructions
+    # earned a vip-agent-ready label could rewrite the body with new instructions
     # and re-fire the agent under a write-scoped token. A stale label must not
     # authorize a run on text it never covered.
     #
@@ -53,9 +53,9 @@ jobs:
   # CLAUDE (default)
   # Complexity-aware execution.
   #
-  # complexity:high  → plan first, human approves by commenting /approve-plan,
-  #                    then plan-approval-gate.yml implements it
-  # complexity:low/medium (or absent) → implement directly
+  # vip-complexity:high  → plan first, human approves by commenting /approve-plan,
+  #                    then vip-plan-approval-gate.yml implements it
+  # vip-complexity:low/medium (or absent) → implement directly
   #
   # The prompts below spell out the work rather than invoking the
   # compound-engineering plugin's /ce-plan and /ce-work, which are local-only and
@@ -64,9 +64,9 @@ jobs:
   trigger-claude:
     # Two conditions, and both are load-bearing.
     #
-    # The event's own label must be agent-ready. Without this, adding any other
+    # The event's own label must be vip-agent-ready. Without this, adding any other
     # label to an already-agent-ready issue starts a run — observed live when a
-    # complexity label and agent-ready arrived seconds apart and produced two
+    # complexity label and vip-agent-ready arrived seconds apart and produced two
     # runs on one issue.
     #
     # The full label set still comes from the API further down, because a
@@ -74,7 +74,7 @@ jobs:
     # complexity. Reading the set is what #16 fixed; gating on the event is what
     # it removed and should not have.
     if: |
-      github.event.label.name == 'agent-ready' &&
+      github.event.label.name == 'vip-agent-ready' &&
       (vars.AGENT_PROVIDER == 'claude' || vars.AGENT_PROVIDER == '')
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -122,11 +122,11 @@ jobs:
       - name: Stop unless the labeller has write access
         if: steps.actor.outputs.allowed != 'true'
         run: |
-          echo "The agent-ready label was not applied by someone with write access."
+          echo "The vip-agent-ready label was not applied by someone with write access."
           echo "Nothing will run. A maintainer can apply the label to start the agent."
 
       # Labels come from the API, not from github.event: a `labeled` event carries
-      # one label, so an issue that gains agent-ready and complexity:high close
+      # one label, so an issue that gains vip-agent-ready and vip-complexity:high close
       # together could otherwise route on whichever arrived first and skip the
       # planning phase.
       - name: Read the issue's labels
@@ -141,18 +141,18 @@ jobs:
               issue_number: context.payload.issue.number,
             });
             const labels = issue.labels.map(l => (typeof l === 'string' ? l : l.name));
-            const ready = labels.includes('agent-ready');
-            const isHigh = labels.includes('complexity:high');
+            const ready = labels.includes('vip-agent-ready');
+            const isHigh = labels.includes('vip-complexity:high');
             console.log('Issue labels:', labels.join(', ') || '(none)');
-            console.log('agent-ready:', ready, '| complexity:high:', isHigh);
+            console.log('vip-agent-ready:', ready, '| vip-complexity:high:', isHigh);
             core.setOutput('ready', ready ? 'true' : 'false');
             core.setOutput('is_high', isHigh ? 'true' : 'false');
 
-      - name: Stop unless the issue is agent-ready
+      - name: Stop unless the issue is vip-agent-ready
         if: steps.labels.outputs.ready != 'true'
-        run: echo "Not labelled agent-ready — nothing to do."
+        run: echo "Not labelled vip-agent-ready — nothing to do."
 
-      # Applying agent-ready to a half-written issue used to run the agent
+      # Applying vip-agent-ready to a half-written issue used to run the agent
       # anyway. It would spend turns and money on a brief with no acceptance
       # criteria, then produce something nobody asked for. Refusing costs
       # seconds and says what is missing.
@@ -162,7 +162,7 @@ jobs:
       - name: Screen the issue before spending anything
         id: screen
         if: steps.actor.outputs.allowed == 'true' && steps.labels.outputs.ready == 'true'
-        uses: ./.github/actions/screen-issue
+        uses: ./.github/actions/vip-screen-issue
         with:
           issue_body: ${{ github.event.issue.body }}
 
@@ -183,7 +183,7 @@ jobs:
                 '',
                 ...missing.map(m => `- ${m}`),
                 '',
-                'Add them and re-apply `agent-ready` to start. Removing and re-adding the',
+                'Add them and re-apply `vip-agent-ready` to start. Removing and re-adding the',
                 'label is what fires the trigger — re-applying a label that is already there',
                 'emits no event.',
                 '',
@@ -193,7 +193,7 @@ jobs:
               ].join('\n')
             });
 
-      # plan-approval-gate.yml has had this check since it was written; the
+      # vip-plan-approval-gate.yml has had this check since it was written; the
       # direct path never did, and no PR in the current batch adds one. Without
       # it, removing and re-applying the label starts a second full run and opens
       # a second pull request against the same issue.
@@ -225,10 +225,10 @@ jobs:
             core.setOutput('already_running', existing ? 'true' : 'false');
 
       # ── HIGH COMPLEXITY: plan first, then gate on /approve-plan ──────────────
-      - name: Run Claude Code — Planning Phase (complexity:high)
+      - name: Run Claude Code — Planning Phase (vip-complexity:high)
         id: claude-plan
         if: steps.actor.outputs.allowed == 'true' && steps.labels.outputs.ready == 'true' && steps.pr-check.outputs.already_running == 'false' && steps.screen.outputs.ready == 'true' && steps.labels.outputs.is_high == 'true'
-        uses: ./.github/actions/claude-run
+        uses: ./.github/actions/vip-claude-run
         with:
           oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           report_issue_number: ${{ github.event.issue.number }}
@@ -238,7 +238,7 @@ jobs:
 
             Issue title: ${{ github.event.issue.title }}
 
-            This is a complexity:high issue. Your job is to PLAN, not implement.
+            This is a vip-complexity:high issue. Your job is to PLAN, not implement.
 
             Instructions:
             1. Read the full issue body:
@@ -257,7 +257,7 @@ jobs:
                - "Implementation plan is ready for review. Reply /approve-plan to begin
                  implementation."
                - "To change the plan first: edit the file on the plan branch, or add
-                 your feedback to this issue and re-apply the agent-ready label to
+                 your feedback to this issue and re-apply the vip-agent-ready label to
                  replan. Commenting alone does not trigger anything — only
                  /approve-plan is listened for."
             7. Do NOT write any application code
@@ -284,7 +284,7 @@ jobs:
             Before opening the PR, if you added or changed anything under
             .github/workflows/, run:
 
-                bash scripts/validate-workflows.sh
+                bash scripts/vip-validate-workflows.sh
 
             Fix what it reports and run it again. Do not open the PR while it
             is failing.
@@ -295,10 +295,10 @@ jobs:
             do instead if the assumption turns out to be wrong. An unverifiable interface
             named in a plan is a question a reviewer can answer; guessed in code it is a
             bug that passes review.
-      - name: Run Claude Code — Direct Execution (complexity:low/medium)
+      - name: Run Claude Code — Direct Execution (vip-complexity:low/medium)
         id: claude-work
         if: steps.actor.outputs.allowed == 'true' && steps.labels.outputs.ready == 'true' && steps.pr-check.outputs.already_running == 'false' && steps.screen.outputs.ready == 'true' && steps.labels.outputs.is_high == 'false'
-        uses: ./.github/actions/claude-run
+        uses: ./.github/actions/vip-claude-run
         with:
           oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           report_issue_number: ${{ github.event.issue.number }}
@@ -319,8 +319,8 @@ jobs:
                - Branch name: agent/issue-${{ github.event.issue.number }}
                - PR title should match the issue title
                - PR body: reference "Closes #${{ github.event.issue.number }}" and summarize what you did
-               - Use the template at .github/PULL_REQUEST_TEMPLATE/agent-generated.md if it exists
-            7. Add the 'agent-generated' label to the PR
+               - Use the template at .github/PULL_REQUEST_TEMPLATE/vip-agent-generated.md if it exists
+            7. Add the 'vip-agent-generated' label to the PR
             8. After the PR is open, update the original issue's acceptance criteria:
                - Check off any criteria your implementation directly satisfies
                - Leave unchecked anything that requires manual testing, human review, or CI
@@ -350,7 +350,7 @@ jobs:
             Before opening the PR, if you added or changed anything under
             .github/workflows/, run:
 
-                bash scripts/validate-workflows.sh
+                bash scripts/vip-validate-workflows.sh
 
             Fix what it reports and run it again. Do not open the PR while it
             is failing.
@@ -414,7 +414,7 @@ jobs:
   # ─────────────────────────────────────────────────────────────────────────────
   trigger-openai-codex:
     if: |
-      github.event.label.name == 'agent-ready' &&
+      github.event.label.name == 'vip-agent-ready' &&
       vars.AGENT_PROVIDER == 'openai-codex'
     runs-on: ubuntu-latest
     # Only what a stub needs. Raise contents/pull-requests to write when you
@@ -467,7 +467,7 @@ jobs:
                 '',
                 'Two ways forward:',
                 '',
-                '- Implement `trigger-openai-codex` in `.github/workflows/agent-ready-trigger.yml`.',
+                '- Implement `trigger-openai-codex` in `.github/workflows/vip-agent-ready-trigger.yml`.',
                 '- Or set `AGENT_PROVIDER` to `claude`, the one provider implemented today.',
                 '',
                 'This run is marked failed on purpose. A run that produces nothing should not',
@@ -484,7 +484,7 @@ jobs:
   # ─────────────────────────────────────────────────────────────────────────────
   trigger-copilot:
     if: |
-      github.event.label.name == 'agent-ready' &&
+      github.event.label.name == 'vip-agent-ready' &&
       vars.AGENT_PROVIDER == 'copilot'
     runs-on: ubuntu-latest
     # Only what a stub needs. Raise contents/pull-requests to write when you
@@ -531,7 +531,7 @@ jobs:
                 '',
                 'Two ways forward:',
                 '',
-                '- Implement `trigger-copilot` in `.github/workflows/agent-ready-trigger.yml`.',
+                '- Implement `trigger-copilot` in `.github/workflows/vip-agent-ready-trigger.yml`.',
                 '- Or set `AGENT_PROVIDER` to `claude`, the one provider implemented today.',
                 '',
                 'This run is marked failed on purpose. A run that produces nothing should not',
@@ -550,7 +550,7 @@ jobs:
   # ─────────────────────────────────────────────────────────────────────────────
   trigger-custom:
     if: |
-      github.event.label.name == 'agent-ready' &&
+      github.event.label.name == 'vip-agent-ready' &&
       vars.AGENT_PROVIDER == 'custom'
     runs-on: ubuntu-latest
     permissions:
@@ -558,14 +558,14 @@ jobs:
       issues: write
 
     steps:
-      - name: Dispatch agent-ready event
+      - name: Dispatch vip-agent-ready event
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
             await github.rest.repos.createDispatchEvent({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              event_type: 'agent-ready',
+              event_type: 'vip-agent-ready',
               client_payload: {
                 issue_number: context.payload.issue.number,
                 issue_title: context.payload.issue.title,
@@ -574,7 +574,7 @@ jobs:
                 labels: context.payload.issue.labels.map(l => l.name)
               }
             });
-            console.log(`Dispatched agent-ready event for issue #${context.payload.issue.number}`);
+            console.log(`Dispatched vip-agent-ready event for issue #${context.payload.issue.number}`);
 
       # A dispatch with no listener is indistinguishable from a working setup:
       # the job goes green and the issue stays silent. Say what happened, so the
@@ -590,7 +590,7 @@ jobs:
               repo: context.repo.repo,
               issue_number: context.payload.issue.number,
               body: [
-                'Dispatched a `repository_dispatch` event of type `agent-ready` for this issue.',
+                'Dispatched a `repository_dispatch` event of type `vip-agent-ready` for this issue.',
                 '',
                 'This template does not implement the agent for `AGENT_PROVIDER=custom` \u2014 it',
                 'hands off. If nothing happens next, the listener workflow in this repository',
