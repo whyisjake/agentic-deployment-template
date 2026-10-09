@@ -20,7 +20,7 @@
 # own progress/summary comments don't, so they create a run that immediately skips —
 # no self-triggering loop.
 
-name: Claude PR Feedback
+name: VIP Claude PR Feedback
 
 on:
   issue_comment:
@@ -33,7 +33,7 @@ on:
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
-# One run per pull request. agent-ready-trigger.yml got this and this file did
+# One run per pull request. vip-agent-ready-trigger.yml got this and this file did
 # not, which is the same oversight in a different place: a reviewer who leaves
 # two @claude comments in quick succession, or comments while a run is already
 # working, starts a second agent on the same branch. Two agents pushing to one
@@ -42,11 +42,11 @@ env:
 # cancel-in-progress is false for the same reason as the trigger: cancelling an
 # agent mid-write loses the work and reports nothing useful.
 concurrency:
-  group: claude-pr-feedback-${{ github.event.issue.number || github.event.pull_request.number }}
+  group: vip-claude-pr-feedback-${{ github.event.issue.number || github.event.pull_request.number }}
   cancel-in-progress: false
 
 jobs:
-  claude-pr-feedback:
+  vip-claude-pr-feedback:
     # Only for the claude provider, only on PR comments/reviews that mention @claude.
     if: |
       (vars.AGENT_PROVIDER == 'claude' || vars.AGENT_PROVIDER == '') &&
@@ -68,7 +68,7 @@ jobs:
       # Authorization gate: only repo collaborators with write/admin may drive the
       # agent. Without this, on a public repo ANY user could comment "@claude …" and run
       # an agent with write access that checks out the PR head (attacker-controllable on
-      # fork PRs) with the token in scope. Runs BEFORE checkout. Mirrors plan-approval-gate.yml.
+      # fork PRs) with the token in scope. Runs BEFORE checkout. Mirrors vip-plan-approval-gate.yml.
       - name: Check commenter permissions
         id: permission-check
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
@@ -104,7 +104,7 @@ jobs:
 
       - name: Run Claude Code (tag mode)
         if: steps.permission-check.outputs.allowed == 'true'
-        uses: ./.github/actions/claude-run
+        uses: ./.github/actions/vip-claude-run
         with:
           oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           trigger_phrase: "@claude"

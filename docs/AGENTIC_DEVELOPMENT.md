@@ -39,7 +39,7 @@ Run `/install-github-app` from Claude Code in a terminal — it sets up the app 
 
 This is a property of how these workflows are configured, not of the action. Passing `github_token: ${{ secrets.GITHUB_TOKEN }}` skips the app entirely — at the cost of the agent's pull request getting no CI run, since GitHub does not start workflows from `GITHUB_TOKEN` events.
 
-Nothing upstream of the agent notices this is missing: labels sync, the auto-labeler flags the issue `agent-candidate`, and the trigger fires as soon as someone applies `agent-ready` — so the failure looks like a broken agent rather than an unfinished setup. Check it before assuming the token is wrong.
+Nothing upstream of the agent notices this is missing: labels sync, the auto-labeler flags the issue `vip-agent-candidate`, and the trigger fires as soon as someone applies `vip-agent-ready` — so the failure looks like a broken agent rather than an unfinished setup. Check it before assuming the token is wrong.
 
 ---
 
@@ -74,7 +74,7 @@ That second part exists because the failure mode here is silence, and silence is
 
 **Read the permission-denial count first.** It is almost always the agent unable to run your tests. Across three real runs on a small Python repository the counts were 3, 9 and 10, and in every case the cause was the same: `Bash(python3 *)` was not in the allow list, so the agent wrote tests it could not execute. It said so honestly in its pull request rather than claiming they passed — but it could not verify its own work, and that is a setup problem, not an agent problem.
 
-Grant what your project needs in the `allow` list in `.github/actions/claude-run/action.yml`.
+Grant what your project needs in the `allow` list in `.github/actions/vip-claude-run/action.yml`.
 
 **When the summary is not enough, there is a switch.** Set the repository variable `AGENT_DEBUG` to `true` and the next run streams Claude's full message history into the job log — every tool call and every result.
 
@@ -183,20 +183,20 @@ Testing:
 
 ## The Agent-Ready Checklist
 
-Before labeling an issue `agent-ready`:
+Before labeling an issue `vip-agent-ready`:
 
 - [ ] **Scope is bounded** — Can be completed in one PR
 - [ ] **Success is measurable** — Clear pass/fail criteria
 - [ ] **Context is sufficient** — Agent can understand why without asking
 - [ ] **Patterns are referenced** — Links to similar code in the repo
 - [ ] **No external blockers** — API keys available, dependencies installed
-- [ ] **Complexity is labeled** — `complexity:low`, `complexity:medium`, or `complexity:high`
+- [ ] **Complexity is labeled** — `vip-complexity:low`, `vip-complexity:medium`, or `vip-complexity:high`
 
 ---
 
 ## Complexity Levels
 
-### `complexity:low`
+### `vip-complexity:low`
 - Single file changes
 - Following an obvious existing pattern
 - Bug fixes with clear reproduction steps
@@ -204,7 +204,7 @@ Before labeling an issue `agent-ready`:
 
 **Example:** Add validation for empty input in an existing form handler
 
-### `complexity:medium`
+### `vip-complexity:medium`
 - Multiple related files
 - New feature following established patterns
 - Refactoring with clear before/after states
@@ -212,7 +212,7 @@ Before labeling an issue `agent-ready`:
 
 **Example:** Add REST endpoints following existing API patterns in the codebase
 
-### `complexity:high`
+### `vip-complexity:high`
 - Architectural decisions required
 - Multiple system integrations
 - New patterns being established
@@ -220,7 +220,7 @@ Before labeling an issue `agent-ready`:
 
 **Example:** Design and implement a multi-provider data pipeline with fallback logic
 
-> **Note:** `complexity:high` issues trigger a planning phase when using Claude + CE. The agent generates an implementation plan that a human approves before any code is written.
+> **Note:** `vip-complexity:high` issues trigger a planning phase when using Claude + CE. The agent generates an implementation plan that a human approves before any code is written.
 
 ---
 
@@ -233,7 +233,7 @@ Before labeling an issue `agent-ready`:
 └─────────────────────────────────────────────────────────────┘
                               ↓
 ┌─────────────────────────────────────────────────────────────┐
-│  2. PLAN (Agent + Human)  — complexity:high only            │
+│  2. PLAN (Agent + Human)  — vip-complexity:high only            │
 │     Agent proposes implementation plan                      │
 │     Human reviews: reply /approve-plan to proceed           │
 │     (Skipped for low/medium complexity)                     │
@@ -266,14 +266,14 @@ Before labeling an issue `agent-ready`:
 
 [Compound Engineering](https://github.com/anthropics/compound-engineering) is a Claude Code plugin that provides structured planning (`/ce-plan`) and work execution (`/ce-work`) skills.
 
-> **Important:** CE plugin slash commands (`/ce-plan`, `/ce-work`) only work in a local, interactive Claude Code session where the plugin is installed. **They are not available in GitHub Actions CI.** The `agent-ready-trigger.yml` workflow uses direct prompts instead — Claude reads the issue, implements the fix, and opens a PR without the plugin. CE is an optional local enhancement, not a CI dependency.
+> **Important:** CE plugin slash commands (`/ce-plan`, `/ce-work`) only work in a local, interactive Claude Code session where the plugin is installed. **They are not available in GitHub Actions CI.** The `vip-agent-ready-trigger.yml` workflow uses direct prompts instead — Claude reads the issue, implements the fix, and opens a PR without the plugin. CE is an optional local enhancement, not a CI dependency.
 
 ### CI Workflow: Low/Medium Complexity
 
 ```
-agent-ready label applied
+vip-agent-ready label applied
         ↓
-agent-ready-trigger.yml fires
+vip-agent-ready-trigger.yml fires
         ↓
 Claude reads issue via gh CLI, reads CLAUDE.md and key files
         ↓
@@ -283,9 +283,9 @@ Claude implements the feature, commits, and opens a PR
 ### CI Workflow: High Complexity
 
 ```
-agent-ready label applied
+vip-agent-ready label applied
         ↓
-agent-ready-trigger.yml fires
+vip-agent-ready-trigger.yml fires
         ↓
 Claude reads issue, writes a plan to docs/plans/
         ↓
@@ -297,7 +297,7 @@ Human reviews the plan (in docs/plans/)
         ↓
 Human replies /approve-plan
         ↓
-plan-approval-gate.yml fires
+vip-plan-approval-gate.yml fires
         ↓
 Claude reads the plan file and implements it, opens a PR
 ```
@@ -327,23 +327,23 @@ CE is an optional enhancement for local sessions. The CI workflow works without 
 
 1. **Use the template** — Click "Use this template" on GitHub
 2. **Enable the template flag** — Settings → General → check "Template repository"
-3. **Sync labels** — Actions → Setup Labels → Run workflow
+3. **Sync labels** — Actions → VIP Setup Labels → Run workflow
 4. **Set your provider** — Settings → Secrets and variables → Variables → `AGENT_PROVIDER`
 5. **Add your secret** — Settings → Secrets and variables → Secrets → add the required token
 
 ### Labels
 
-The workflow uses 7 labels. All are created by the Setup Labels workflow.
+The workflow uses 7 labels. All are created by the VIP Setup Labels workflow.
 
 | Label | Applied by | Meaning |
 |-------|-----------|---------|
-| `agent-ready` | Human or auto-labeler | Issue is scoped for agent execution |
-| `agent-candidate` | Issue screener | Screener flagged as promising — human review needed |
-| `agent-generated` | Agent | PR was created by an agent |
-| `needs-planning` | Human | Manual flag: this issue needs a plan before execution |
-| `complexity:low` | Human | Single file, clear pattern |
-| `complexity:medium` | Human | Multiple files, established patterns |
-| `complexity:high` | Human | Architectural work — triggers planning phase |
+| `vip-agent-ready` | Human or auto-labeler | Issue is scoped for agent execution |
+| `vip-agent-candidate` | Issue screener | Screener flagged as promising — human review needed |
+| `vip-agent-generated` | Agent | PR was created by an agent |
+| `vip-needs-planning` | Human | Manual flag: this issue needs a plan before execution |
+| `vip-complexity:low` | Human | Single file, clear pattern |
+| `vip-complexity:medium` | Human | Multiple files, established patterns |
+| `vip-complexity:high` | Human | Architectural work — triggers planning phase |
 
 ### Adding CI Checks
 
@@ -368,7 +368,7 @@ jobs:
 
 ### Code Review Guidelines for Agent PRs
 
-When reviewing agent-generated code, focus on:
+When reviewing vip-agent-generated code, focus on:
 
 **1. Intent Match**
 - Does the code actually solve the issue?
@@ -447,9 +447,9 @@ When reviewing agent-generated code, focus on:
 
 ## Extending Provider Stubs
 
-The `openai-codex` and `copilot` jobs in `agent-ready-trigger.yml` are intentional stubs. To activate them:
+The `openai-codex` and `copilot` jobs in `vip-agent-ready-trigger.yml` are intentional stubs. To activate them:
 
-1. Open `.github/workflows/agent-ready-trigger.yml`
+1. Open `.github/workflows/vip-agent-ready-trigger.yml`
 2. Find the stub job for your provider (search for `# TODO: extend`)
 3. Replace the stub `run:` block with your actual invocation
 4. Add the required secret (see the job's `env:` block)
@@ -472,7 +472,7 @@ If you build a working provider integration, consider contributing it back via a
 
 ## Getting Started
 
-1. **Start small** — Pick a `complexity:low` issue for your first agent-assisted task
+1. **Start small** — Pick a `vip-complexity:low` issue for your first agent-assisted task
 2. **Use the template** — It forces good structure
 3. **Review agent output** — Learn what works and what needs refinement
 4. **Iterate on issues** — Improve your issue-writing based on results

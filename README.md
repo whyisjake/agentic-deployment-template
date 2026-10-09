@@ -9,12 +9,12 @@ Built on the workflow developed at [Pew Research Center](https://pewresearch.org
 ## How It Works
 
 1. A developer opens an issue using the **Agent-Ready template**
-2. When the issue has all the required sections, the auto-labeler flags it `agent-candidate` — a hint that it looks ready
-3. A human adds `agent-ready` (or re-applies it), and the trigger workflow routes to your configured AI agent
+2. When the issue has all the required sections, the auto-labeler flags it `vip-agent-candidate` — a hint that it looks ready
+3. A human adds `vip-agent-ready` (or re-applies it), and the trigger workflow routes to your configured AI agent
 4. The agent implements the feature and opens a PR
 5. A human reviews and merges
 
-For `complexity:high` issues, Claude + Compound Engineering runs a planning phase first — generating a structured implementation plan that a human approves before any code is written.
+For `vip-complexity:high` issues, Claude + Compound Engineering runs a planning phase first — generating a structured implementation plan that a human approves before any code is written.
 
 ---
 
@@ -50,7 +50,7 @@ Settings → General → check "Template repository".
 Run the label sync workflow once to create all agent workflow labels in your repo:
 
 ```
-Actions → Setup Labels → Run workflow
+Actions → VIP Setup Labels → Run workflow
 ```
 
 **Step 3 — Configure your agent**
@@ -72,7 +72,7 @@ If `AGENT_PROVIDER` is not set, the workflow defaults to `claude`.
 |---|---|
 | `AGENT_DEBUG=true` | Streams Claude's full message history into the job log. **Off by default on purpose** — the stream includes tool results, and job logs are visible to anyone who can read the repository. See [AGENTIC_DEVELOPMENT.md](docs/AGENTIC_DEVELOPMENT.md). |
 
-**The secret is yours to add.** Secrets are write-only, so no script can set one for you — `setup.sh` reports whether it is there and stops short of claiming you are done without it. This matters because nothing else complains: labels sync, CI goes green, and the repo looks configured, but labelling an issue `agent-ready` will not start the agent. Add it with `gh secret set CLAUDE_CODE_OAUTH_TOKEN`, or at `Settings → Secrets and variables → Actions → Secrets`.
+**The secret is yours to add.** Secrets are write-only, so no script can set one for you — `setup.sh` reports whether it is there and stops short of claiming you are done without it. This matters because nothing else complains: labels sync, CI goes green, and the repo looks configured, but labelling an issue `vip-agent-ready` will not start the agent. Add it with `gh secret set CLAUDE_CODE_OAUTH_TOKEN`, or at `Settings → Secrets and variables → Actions → Secrets`.
 
 **Step 4 — Install the Claude GitHub App** *(recommended, not required)*
 
@@ -84,22 +84,22 @@ Otherwise install it at **https://github.com/apps/claude** → **Configure** →
 
 `anthropics/claude-code-action` exchanges the workflow's OIDC token for a GitHub App installation token when the app is installed, and falls back to the workflow's own `GITHUB_TOKEN` when it is not. GitHub does not start workflow runs from events triggered by `GITHUB_TOKEN` — so without the app, the agent's pull request arrives with **no CI run on it**, and a PR your test suite never touched is a poor thing to hand a reviewer. That is the reason to install it.
 
-The same applies to `claude-pr-feedback.yml` and `plan-approval-gate.yml`, which use the same action.
+The same applies to `vip-claude-pr-feedback.yml` and `vip-plan-approval-gate.yml`, which use the same action.
 
 **Step 5 — Open an agent-ready issue**
-Use the **Agent-Ready Task** issue template. Fill in all sections, add a `complexity:` label, then **add `agent-ready` yourself** — that label is what starts the agent.
+Use the **Agent-Ready Task** issue template. Fill in all sections, add a `vip-complexity:` label, then **add `vip-agent-ready` yourself** — that label is what starts the agent.
 
-The auto-labeler does not apply `agent-ready` and cannot start a run. It applies `agent-candidate` to issues that have the right shape — a review hint. Only `agent-ready`, applied by a person, starts the agent.
+The auto-labeler does not apply `vip-agent-ready` and cannot start a run. It applies `vip-agent-candidate` to issues that have the right shape — a review hint. Only `vip-agent-ready`, applied by a person, starts the agent.
 
-**A malformed issue is refused rather than attempted.** When you apply `agent-ready`, the trigger runs the same structural check and stops if sections are missing, commenting with what to add. That check is structural only: it confirms the sections exist, not that they say anything useful. An issue with every heading and nothing under them will pass it — which is exactly why the label a machine applies is a hint and the label that starts a run is applied by a person.
+**A malformed issue is refused rather than attempted.** When you apply `vip-agent-ready`, the trigger runs the same structural check and stops if sections are missing, commenting with what to add. That check is structural only: it confirms the sections exist, not that they say anything useful. An issue with every heading and nothing under them will pass it — which is exactly why the label a machine applies is a hint and the label that starts a run is applied by a person.
 
 **Only a collaborator with write access can start a run.** The trigger checks who applied the label and stops if they do not have it. This is the security boundary that matters: an agent run holds a write-scoped token and takes the issue body as instructions, so anyone who can start one can direct it. Someone without write access can still open and describe an issue — they just cannot fire the agent themselves.
 
-Add the complexity label **before** `agent-ready`, and this order matters. Only the `agent-ready` label starts a run, and the trigger then reads the issue's full label set from the API — so a `complexity:high` issue that gains its complexity label *after* `agent-ready` has already fired will have taken the direct path and skipped planning.
+Add the complexity label **before** `vip-agent-ready`, and this order matters. Only the `vip-agent-ready` label starts a run, and the trigger then reads the issue's full label set from the API — so a `vip-complexity:high` issue that gains its complexity label *after* `vip-agent-ready` has already fired will have taken the direct path and skipped planning.
 
 ### Workflow and permission guard
 
-`scripts/validate-workflows.sh` does two things, and CI runs it on any PR touching a workflow.
+`scripts/vip-validate-workflows.sh` does two things, and CI runs it on any PR touching a workflow.
 
 **It parses every workflow file.** A file that doesn't parse fails quietly — GitHub can't schedule a job from something it couldn't read, so the run ends in seconds with no jobs and no log, which reads as broken code rather than broken YAML. The usual cause is a colon-space in a plain `run:` line, and quoting doesn't help:
 
@@ -118,7 +118,7 @@ This exists because those lists are hand-maintained across four call sites, a wi
 Run it yourself any time:
 
 ```bash
-bash scripts/validate-workflows.sh
+bash scripts/vip-validate-workflows.sh
 ```
 
 ---
@@ -128,7 +128,7 @@ bash scripts/validate-workflows.sh
 | Provider | Status | Notes |
 |----------|--------|-------|
 | **Claude + Compound Engineering** | Implemented | Complexity-aware: high issues plan first, low/medium execute directly |
-| **OpenAI Codex** | **Not implemented** — stub job | Write `trigger-openai-codex` in `.github/workflows/agent-ready-trigger.yml` |
+| **OpenAI Codex** | **Not implemented** — stub job | Write `trigger-openai-codex` in `.github/workflows/vip-agent-ready-trigger.yml` |
 | **GitHub Copilot (gh-aw)** | **Not implemented** — stub job | Write `trigger-copilot`; requires `gh aw compile` setup |
 | **Custom** | `repository_dispatch` only | Dispatches the issue payload; wire your own listener in the same repo |
 
@@ -139,21 +139,21 @@ bash scripts/validate-workflows.sh
 ```
 .github/
 ├── ISSUE_TEMPLATE/
-│   └── agent-ready.md          # Structured issue template for agent execution
+│   └── vip-agent-ready.md          # Structured issue template for agent execution
 ├── PULL_REQUEST_TEMPLATE/
-│   └── agent-generated.md      # PR template for agent-created PRs
-├── LABELS.yml                  # 7 labels for the agent workflow
+│   └── vip-agent-generated.md      # PR template for agent-created PRs
+├── vip-agent-labels.yml                  # 7 labels for the agent workflow
 ├── agents/
-│   └── issue-screener.agent.md # Claude-powered issue screener (opt-in)
+│   └── vip-issue-screener.agent.md # Claude-powered issue screener (opt-in)
 └── workflows/
-    ├── agent-ready-trigger.yml  # Core: routes labeled issues to your agent
-    ├── plan-approval-gate.yml   # /approve-plan comment listener (high complexity)
-    ├── setup-labels.yml         # One-time label import
-    ├── auto-label-agent-ready.yml # Auto-applies agent-ready to complete issues
-    ├── issue-screener.yml       # Weekly screener for unscreened issues
-    └── validate-workflows.yml   # Fails a PR whose workflow YAML or allow list is bad
+    ├── vip-agent-ready-trigger.yml  # Core: routes labeled issues to your agent
+    ├── vip-plan-approval-gate.yml   # /approve-plan comment listener (high complexity)
+    ├── vip-setup-labels.yml         # One-time label import
+    ├── vip-auto-label-agent-ready.yml # Flags complete issues vip-agent-candidate
+    ├── vip-issue-screener.yml       # Weekly screener for unscreened issues
+    └── vip-validate-workflows.yml   # Fails a PR whose workflow YAML or allow list is bad
 scripts/
-└── validate-workflows.sh       # The check behind that — also run by the agent
+└── vip-validate-workflows.sh       # The check behind that — also run by the agent
 ```
 
 ---
@@ -162,13 +162,13 @@ scripts/
 
 | Label | Purpose |
 |-------|---------|
-| `agent-ready` | Issue is properly scoped for agent execution |
-| `agent-candidate` | Issue screener flagged as a candidate (human review needed) |
-| `agent-generated` | PR was created by an AI agent |
-| `needs-planning` | Requires agent planning phase before execution |
-| `complexity:low` | Single file, clear pattern |
-| `complexity:medium` | Multiple files, established patterns |
-| `complexity:high` | Architectural decisions — triggers planning phase |
+| `vip-agent-ready` | Issue is properly scoped for agent execution |
+| `vip-agent-candidate` | Issue screener flagged as a candidate (human review needed) |
+| `vip-agent-generated` | PR was created by an AI agent |
+| `vip-needs-planning` | Requires agent planning phase before execution |
+| `vip-complexity:low` | Single file, clear pattern |
+| `vip-complexity:medium` | Multiple files, established patterns |
+| `vip-complexity:high` | Architectural decisions — triggers planning phase |
 
 ---
 
@@ -176,8 +176,8 @@ scripts/
 
 When `AGENT_PROVIDER=claude`, the trigger workflow uses **Compound Engineering** (a Claude Code plugin) for structured planning and execution:
 
-- **`complexity:low` / `complexity:medium`**: Claude invokes `/ce-work` directly → opens a PR
-- **`complexity:high`**: Claude invokes `/ce-plan` → commits a plan to `docs/plans/` → posts a comment asking for approval → a collaborator replies `/approve-plan` → Claude invokes `/ce-work` → opens a PR
+- **`vip-complexity:low` / `vip-complexity:medium`**: Claude invokes `/ce-work` directly → opens a PR
+- **`vip-complexity:high`**: Claude invokes `/ce-plan` → commits a plan to `docs/plans/` → posts a comment asking for approval → a collaborator replies `/approve-plan` → Claude invokes `/ce-work` → opens a PR
 
 This gives you human-in-the-loop oversight for architectural work while keeping simple tasks fully automated.
 
@@ -194,11 +194,11 @@ This gives you human-in-the-loop oversight for architectural work while keeping 
 
 ## Customization
 
-**Change required issue sections** — edit the `requiredSections` array in `.github/workflows/auto-label-agent-ready.yml`.
+**Change required issue sections** — edit the `requiredSections` array in `.github/workflows/vip-auto-label-agent-ready.yml`.
 
 **Add CI checks** — create your own `.github/workflows/ci.yml` with stack-specific linting and tests. The template intentionally omits this (too stack-specific).
 
-**Extend a stub provider** — find the `# TODO: extend for [provider]` comment in `agent-ready-trigger.yml` and add your invocation steps.
+**Extend a stub provider** — find the `# TODO: extend for [provider]` comment in `vip-agent-ready-trigger.yml` and add your invocation steps.
 
 ---
 

@@ -1,15 +1,17 @@
 ---
-name: '🤖 Agent-Ready Task'
-about: Well-scoped issue for AI-assisted development
+name: '🤖 Agent-Ready Task (WordPress VIP)'
+about: Well-scoped issue for an AI agent to implement, from WordPress VIP Agentic Deployments
 title: ''
 labels: ''
 assignees: ''
 ---
 
-<!-- Applying the agent-ready label starts the agent. This template deliberately
-     does not apply it for you: a complexity:high issue needs its complexity label
+<!-- Applying the vip-agent-ready label starts the agent. This template deliberately
+     does not apply it for you: a vip-complexity:high issue needs its complexity label
      on before the agent starts, or it takes the direct path and skips the planning
-     phase. Fill this in, add your complexity label, then add agent-ready yourself. -->
+     phase. Fill this in, add your complexity label, then add vip-agent-ready yourself. -->
+
+> 🤖 **WordPress VIP Agentic Deployments.** Adding the `vip-agent-ready` label to this issue starts an AI agent that opens a pull request for review.
 
 ## Summary
 
@@ -84,13 +86,13 @@ assignees: ''
 
 <!-- Delete the ones that don't apply -->
 
-- [ ] `complexity:low` — Single file, obvious pattern, quick fix
-- [x] `complexity:medium` — Multiple files, follows established patterns
-- [ ] `complexity:high` — Architectural decisions, new patterns, needs planning phase
+- [ ] `vip-complexity:low` — Single file, obvious pattern, quick fix
+- [x] `vip-complexity:medium` — Multiple files, follows established patterns
+- [ ] `vip-complexity:high` — Architectural decisions, new patterns, needs planning phase
 
 ## Agent Readiness
 
-<!-- Verify before adding the agent-ready label -->
+<!-- Verify before adding the vip-agent-ready label -->
 
 - [ ] Scope is bounded (can be done in one PR)
 - [ ] Success criteria are measurable
