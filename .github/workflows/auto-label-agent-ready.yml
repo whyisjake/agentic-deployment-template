@@ -27,6 +27,10 @@ jobs:
   check-and-label:
     runs-on: ubuntu-latest
     permissions:
+      # The screen runs from a local action, so the job checks out the repo. A
+      # job that lists any permission gets none it does not list, and checkout
+      # of a private repo fails with "Repository not found" without this.
+      contents: read
       issues: write
 
     steps:
@@ -58,8 +62,9 @@ jobs:
               });
               console.log('Applied agent-candidate. A human applies agent-ready to start a run.');
             } catch (err) {
-              // Most likely cause: the label does not exist in this repo yet.
+              // Name the label sync as one possible cause, not the cause: this
+              // message once sent people to Setup Labels for a checkout failure.
               core.setFailed(
                 `Failed to add agent-candidate: ${err.message}. ` +
-                'Run the Setup Labels workflow (Actions → Setup Labels → Run workflow).');
+                'If the label is missing, run the Setup Labels workflow (Actions → Setup Labels → Run workflow).');
             }
