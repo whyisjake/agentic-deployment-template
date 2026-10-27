@@ -16,13 +16,13 @@
 # from which both trees are visible, and a check on the public side could only
 # ever compare that copy against itself.
 #
-# "Expected to" is doing real work in that sentence. This job had never once
-# executed before VIPPROD-1154 -- it requested a runner label the enterprise
-# instance does not serve -- so outbound reachability from a `secex` runner to
-# github.com has never actually been observed. The fetch step below already
-# treats an unreachable public copy as a reportable outcome rather than as
-# in-sync, so a first run that cannot clone will say so plainly rather than
-# going quiet. That is the answer either way; it just has not been tested yet.
+# "Expected to" turned out to be wrong. Once VIPPROD-1154 gave this job a
+# runner it could get, every weekly run (12, 19 and 26 Oct) failed to clone the
+# public copy -- "gnutls_handshake() failed: The TLS connection was non-properly
+# terminated" -- because `secex` runners have no route to github.com. Until they
+# do, this job cannot compare anything, so an unreachable public copy FAILS the
+# run. It used to end in a warning on a green run, which is the silent pass this
+# check exists to prevent: three green runs that verified nothing.
 #
 # It compares CONTENT, not the presence of paths. When these copies last
 # drifted, seven files existed on both sides with different contents — every
@@ -160,7 +160,10 @@ jobs:
               title, body, labels: ['template-drift'],
             });
 
-      - name: Say what could not be checked
+      # Fail rather than warn. A green run here reads as "the copies agree", and
+      # when the public copy is unreachable nothing was compared at all.
+      - name: Fail when the public copy could not be checked
         if: steps.fetch.outputs.reachable == 'false'
         run: |
-          echo "::warning::Could not reach the public copy — drift was not verified this run."
+          echo "::error::Could not reach the public copy, so drift was not verified this run."
+          exit 1
